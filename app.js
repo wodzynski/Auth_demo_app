@@ -28,7 +28,7 @@ passport.deserializeUser(User.deserializeUser());
 
 app.get('/', (req, res) => res.render('home'));
 
-app.get('/secret', (req,res) => res.render('secret'));
+app.get('/secret', isLoggedIn, (req,res) => res.render('secret'));
 
 // AUTH ROUTES
 
@@ -40,9 +40,8 @@ app.post('/register', (req, res) => {
     if(err) {
       console.log(err);
       return res.render('register');
-    } else {
-      passport.authenticate('local')(req, res, () => res.redirect('/secret'));
     }
+      passport.authenticate('local')(req, res, () => res.redirect('/secret'));
   });
 });
 
@@ -51,10 +50,22 @@ app.post('/register', (req, res) => {
 app.get('/login', (req, res) => res.render('login'));
 
 //handling login logic
-//middleware
 app.post('/login', passport.authenticate('local', {
   successRedirect: '/secret',
   failureRedirect: '/login'
 }), (req, res) => {});
+
+app.get('/logout', (req, res) => {
+  req.logout();
+  res.redirect('/');
+});
+
+//middleware
+function isLoggedIn(req, res, next){
+  if(req.isAuthenticated()){
+    return next();
+  }
+  res.redirect('/login');
+};
 
 app.listen(3000, process.env.IP, () => console.log('The server has started!'));
